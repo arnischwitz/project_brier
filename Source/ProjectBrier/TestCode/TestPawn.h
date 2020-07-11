@@ -4,7 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+
+#include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
 #include "TestPawn.generated.h"
+
 
 UCLASS()
 class PROJECTBRIER_API ATestPawn : public APawn
@@ -26,11 +32,24 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+protected:
+
 	// Player Controls
 	void MoveCharForward(float axisValue);
 	void MoveCharStrafe(float axisValue);
 
+	// Camera Controls
+	void RotateCamHorizontal(float axisValue);
+	void RotateCamVertical(float axisValue);
+
 private:
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* StaticMesh;
+	UPROPERTY(EditAnywhere)
+	USpringArmComponent* CameraSpringArm;
+	UPROPERTY(EditAnywhere)
+	UCameraComponent* Camera;
+
 	float speed;
 
 };

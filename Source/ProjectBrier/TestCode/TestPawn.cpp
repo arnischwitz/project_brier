@@ -3,6 +3,8 @@
 
 #include "TestPawn.h"
 
+#include "UObject/ConstructorHelpers.h"
+
 // Sets default values
 ATestPawn::ATestPawn()
 {
@@ -11,8 +13,26 @@ ATestPawn::ATestPawn()
 
 	this->AutoPossessPlayer = EAutoReceiveInput::Player0;
 
-	USceneComponent* rootComponent = this->CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	this->SetRootComponent(rootComponent);
+	this->RootComponent = this->CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
+	this->StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	this->StaticMesh->SetupAttachment(RootComponent);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("StaticMesh'/Game/Art/Cube2.Cube2'"));
+	UStaticMesh* Asset = MeshAsset.Object;
+	
+	this->StaticMesh->SetStaticMesh(Asset);
+	this->StaticMesh->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+
+	this->CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
+	this->CameraSpringArm->SetupAttachment(this->RootComponent);
+	this->CameraSpringArm->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(-30.0f, 0.0f, 0.0f));
+	this->CameraSpringArm->TargetArmLength = 200.f;
+	this->CameraSpringArm->bEnableCameraLag = true;
+	this->CameraSpringArm->CameraLagSpeed = 3.0f;
+
+	this->Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
+	this->Camera->SetupAttachment(this->CameraSpringArm, USpringArmComponent::SocketName);
 
 	// Dynamic variables
 	this->speed = 2.0f;
@@ -53,6 +73,24 @@ void ATestPawn::MoveCharForward(float axisValue)
 }
 
 void ATestPawn::MoveCharStrafe(float axisValue)
+{
+	FRotator rot(0.0f, this->GetControlRotation().Yaw, 0.0f);
+
+	this->AddActorWorldOffset(rot.Vector().RightVector * axisValue);
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Axis Value: %s"), *rot.Vector().ToString()));
+}
+
+void ATestPawn::RotateCamHorizontal(float axisValue)
+{
+	FRotator rot(0.0f, this->GetControlRotation().Yaw, 0.0f);
+
+	this->AddActorWorldOffset(rot.Vector() * axisValue);
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("Axis Value: %s"), *rot.Vector().ToString()));
+}
+
+void ATestPawn::RotateCamVertical(float axisValue)
 {
 	FRotator rot(0.0f, this->GetControlRotation().Yaw, 0.0f);
 
